@@ -8,6 +8,7 @@ import {
     Properties,
     DataConstantProperty,
     DataDrivenProperty,
+    CrossFadedDataDrivenProperty,
     CrossFadedProperty,
     HeatmapColorProperty
 } from '../properties';
