@@ -31,6 +31,7 @@ export type Feature = {
 
 export type GlobalProperties = {
     zoom: number,
+    tileRatio?: number,
     heatmapDensity?: number
 };
 
