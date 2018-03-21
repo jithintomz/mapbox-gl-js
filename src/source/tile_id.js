@@ -67,6 +67,10 @@ class OverscaledTileID {
         this.key = calculateKey(wrap, overscaledZ, x, y);
     }
 
+    equals(id: OverscaledTileID) {
+        return this.overscaledZ === id.overscaledZ && this.wrap === id.wrap && this.canonical.equals(id.canonical);
+    }
+
     scaledTo(targetZ: number) {
         assert(targetZ <= this.overscaledZ);
         const zDifference = this.canonical.z - targetZ;

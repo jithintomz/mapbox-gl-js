@@ -42,6 +42,7 @@ class SourceCache extends Evented {
     _sourceLoaded: boolean;
     _sourceErrored: boolean;
     _tiles: {[any]: Tile};
+    _prevTiles: {[any]: Tile};
     _cache: Cache<Tile>;
     _timers: {[any]: TimeoutID};
     _cacheTimers: {[any]: TimeoutID};
@@ -359,7 +360,7 @@ class SourceCache extends Evented {
             const parent = tileID.scaledTo(z);
             if (!parent) return;
             const id = String(parent.key);
-            const tile = this._tiles[id];
+            const tile = this._getPrevTile(id);
             if (tile && tile.hasData()) {
                 retain[id] = parent;
                 return tile;
@@ -472,17 +473,46 @@ class SourceCache extends Evented {
             retain[fadedParent] = parentsForFading[fadedParent];
         }
         // Remove the tiles we don't need anymore.
-        const remove = util.keysDifference(this._tiles, retain);
-        for (let i = 0; i < remove.length; i++) {
-            this._removeTile(remove[i]);
+        //const remove = util.keysDifference(this._tiles, retain);
+        //for (let i = 0; i < remove.length; i++) {
+        for (const key in this._prevTiles) {
+            //console.log('tile', this._prevTiles[key]);
+            for (const tile of this._prevTiles[key]) {
+                //console.log('remove tile', tile, tile.tileID.key, tile.tileID.wrapped().key);
+                this._removeTile(tile);
+            }
         }
+
+        //console.log(this._tiles, this._prevTiles);
     }
 
     _updateRetainedTiles(idealTileIDs: Array<OverscaledTileID>, zoom: number): { [string]: OverscaledTileID} {
+        //console.log('----');
         const retain = {};
         const checked: {[number]: boolean } = {};
         const minCoveringZoom = Math.max(zoom - SourceCache.maxOverzooming, this._source.minzoom);
         const maxCoveringZoom = Math.max(zoom + SourceCache.maxUnderzooming,  this._source.minzoom);
+
+        const prevTiles = this._tiles;
+        this._tiles = {};
+
+        // Add all ideal tiles that were used for the previous frame.
+        // Use unwrapped keys to match on tiles that matche exact wraps.
+        for (const tileID of idealTileIDs) {
+            if (prevTiles[tileID.key]) {
+                this._tiles[tileID.key] = prevTiles[tileID.key];
+                delete prevTiles[tileID.key];
+            }
+        }
+
+        this._prevTiles = {};
+        for (const key in prevTiles) {
+            const wrappedKey = prevTiles[key].tileID.wrapped().key;
+            if (this._prevTiles[wrappedKey] === undefined) {
+                this._prevTiles[wrappedKey] = [];
+            }
+            this._prevTiles[wrappedKey].push(prevTiles[key])
+        }
 
         for (let i = 0; i < idealTileIDs.length; i++) {
             const tileID = idealTileIDs[i];
@@ -559,6 +589,15 @@ class SourceCache extends Evented {
         return retain;
     }
 
+    _getPrevTile(tileID: OverscaledTileID) {
+        const tiles = this._prevTiles[tileID.wrapped().key];
+        const tile = tiles && tiles.pop();
+        if (tile) {
+            tile.tileID = tileID;
+        }
+        return tile;
+    }
+
     /**
      * Add a tile, given its coordinate, to the pyramid.
      * @private
@@ -568,11 +607,18 @@ class SourceCache extends Evented {
         if (tile)
             return tile;
 
+        tile = this._getPrevTile(tileID);
+        if (tile) {
+            //console.log('reuse prev tile', tileID.key);
+            this._tiles[tileID.key] = tile;
+            return tile;
+        }
 
         tile = this._cache.getAndRemove((tileID.wrapped().key: any));
         if (tile) {
             // set the tileID because the cached tile could have had a different wrap value
             tile.tileID = tileID;
+            console.log('reuse cache', tileID.key);
             if (this._cacheTimers[tileID.key]) {
                 clearTimeout(this._cacheTimers[tileID.key]);
                 delete this._cacheTimers[tileID.key];
@@ -582,6 +628,7 @@ class SourceCache extends Evented {
 
         const cached = Boolean(tile);
         if (!cached) {
+            //console.log("LOAD TILE", tileID.key, tileID.wrapped().key, this._tiles, this._prevTiles)
             tile = new Tile(tileID, this._source.tileSize * tileID.overscaleFactor());
             this._loadTile(tile, this._tileLoaded.bind(this, tile, tileID.key, tile.state));
         }
@@ -630,24 +677,17 @@ class SourceCache extends Evented {
      * Remove a tile, given its id, from the pyramid
      * @private
      */
-    _removeTile(id: string | number) {
-        const tile = this._tiles[id];
-        if (!tile)
-            return;
-
-        tile.uses--;
-        delete this._tiles[id];
+    _removeTile(tile: Tile) {
+        const id = tile.tileID.key;
         if (this._timers[id]) {
             clearTimeout(this._timers[id]);
             delete this._timers[id];
         }
 
-        if (tile.uses > 0)
-            return;
-
         if (tile.hasData()) {
             tile.tileID = tile.tileID.wrapped();
             const wrappedId = tile.tileID.key;
+            console.log('add to cache', wrappedId);
             this._cache.add((wrappedId: any), tile);
             this._setCacheInvalidationTimer(wrappedId, tile);
         } else {

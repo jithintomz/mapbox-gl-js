@@ -116,16 +116,27 @@ class CrossTileIDs {
     }
 }
 
+let debug = false;
 class CrossTileSymbolLayerIndex {
     indexes: {[zoom: string | number]: {[tileId: string | number]: TileLayerIndex}};
+    bucketInstanceIdIndex: { [bucketInstanceId: number]: OverscaledTileID };
     usedCrossTileIDs: {[zoom: string | number]: {[crossTileID: number]: boolean}};
 
     constructor() {
         this.indexes = {};
+        this.bucketInstanceIdIndex = {};
         this.usedCrossTileIDs = {};
     }
 
     addBucket(tileID: OverscaledTileID, bucket: SymbolBucket, crossTileIDs: CrossTileIDs) {
+        const oldTileID = this.bucketInstanceIdIndex[bucket.bucketInstanceId];
+        if (oldTileID && !oldTileID.equals(tileID)) {
+            //console.log("move");
+            this.indexes[tileID.overscaledZ][tileID.key] = this.indexes[oldTileID.overscaledZ][oldTileID.key];
+            delete this.indexes[oldTileID.overscaledZ][oldTileID.key];
+            this.bucketInstanceIdIndex = tileID;
+        }
+
         if (this.indexes[tileID.overscaledZ] &&
             this.indexes[tileID.overscaledZ][tileID.key]) {
             if (this.indexes[tileID.overscaledZ][tileID.key].bucketInstanceId ===
@@ -137,10 +148,13 @@ class CrossTileSymbolLayerIndex {
                 // the new bucket can claim them.
                 // The old index entries themselves stick around until
                 // 'removeStaleBuckets' is called.
-                this.removeBucketCrossTileIDs(tileID.overscaledZ,
-                    this.indexes[tileID.overscaledZ][tileID.key]);
+                const removedIndex = this.indexes[tileID.overscaledZ][tileID.key];
+                this.removeBucketCrossTileIDs(tileID.overscaledZ, removedIndex);
+                delete this.bucketInstanceIdIndex[removedIndex.bucketInstanceId];
+                //console.log('here');
             }
         }
+        //if (debug) console.log('add new',bucket.bucketInstanceId);
 
         for (const symbolInstance of bucket.symbolInstances) {
             symbolInstance.crossTileID = 0;
@@ -181,6 +195,7 @@ class CrossTileSymbolLayerIndex {
             this.indexes[tileID.overscaledZ] = {};
         }
         this.indexes[tileID.overscaledZ][tileID.key] = new TileLayerIndex(tileID, bucket.symbolInstances, bucket.bucketInstanceId);
+        this.bucketInstanceIdIndex[bucket.bucketInstanceId] = tileID;
 
         return true;
     }
@@ -198,9 +213,11 @@ class CrossTileSymbolLayerIndex {
         for (const z in this.indexes) {
             const zoomIndexes = this.indexes[z];
             for (const tileKey in zoomIndexes) {
-                if (!currentIDs[zoomIndexes[tileKey].bucketInstanceId]) {
+                const bucketInstanceId = zoomIndexes[tileKey].bucketInstanceId;
+                if (!currentIDs[bucketInstanceId]) {
                     this.removeBucketCrossTileIDs(z, zoomIndexes[tileKey]);
                     delete zoomIndexes[tileKey];
+                    delete this.bucketInstanceIdIndex[bucketInstanceId];
                     tilesChanged = true;
                 }
             }
@@ -228,6 +245,7 @@ class CrossTileSymbolIndex {
 
         let symbolBucketsChanged = false;
         const currentBucketIDs = {};
+        debug = styleLayer.id === 'country-label-lg';
 
         for (const tile of tiles) {
             const symbolBucket = ((tile.getBucket(styleLayer): any): SymbolBucket);
@@ -235,6 +253,7 @@ class CrossTileSymbolIndex {
 
             if (!symbolBucket.bucketInstanceId) {
                 symbolBucket.bucketInstanceId = ++this.maxBucketInstanceId;
+                //if (debug) console.log('assign', symbolBucket.bucketInstanceId);
             }
 
             if (layerIndex.addBucket(tile.tileID, symbolBucket, this.crossTileIDs)) {
@@ -242,6 +261,7 @@ class CrossTileSymbolIndex {
             }
             currentBucketIDs[symbolBucket.bucketInstanceId] = true;
         }
+        //if (debug) console.log(currentBucketIDs);
 
         if (layerIndex.removeStaleBuckets(currentBucketIDs)) {
             symbolBucketsChanged = true;
