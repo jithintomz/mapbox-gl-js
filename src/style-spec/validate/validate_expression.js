@@ -13,6 +13,11 @@ export default function validateExpression(options: any) {
         });
     }
 
+    const expressionDependency = options.valueSpec['expression-dependency'];
+    if (expressionDependency && expressionDependency !== expression.value._styleExpression.expression.input.name) {
+        return new ValidationError(options.key, options.value, `Invalid data expression for ${options.propertyKey}. Expression must take ${expressionDependency} as an input.`);
+    }
+
     if (options.expressionContext === 'property' && options.propertyKey === 'text-font' &&
         (expression.value: any)._styleExpression.expression.possibleOutputs().indexOf(undefined) !== -1) {
         return [new ValidationError(options.key, options.value, 'Invalid data expression for "text-font". Output values must be contained as literals within the expression.')];

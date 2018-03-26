@@ -115,6 +115,7 @@ class LineBucket implements Bucket {
         this.indexArray = new TriangleIndexArray();
         this.programConfigurations = new ProgramConfigurationSet(layoutAttributes, options.layers, options.zoom);
         this.segments = new SegmentVector();
+        this.lineMetrics = options.lineMetrics;
     }
 
     populate(features: Array<IndexedFeature>, options: PopulateParameters) {
@@ -159,12 +160,12 @@ class LineBucket implements Bucket {
 
     addLine(vertices: Array<Point>, feature: VectorTileFeature, join: string, cap: string, miterLimit: number, roundLimit: number) {
         let lineDistances = null;
-        if (!!feature.properties &&
-            feature.properties.hasOwnProperty('$distance_start') &&
-            feature.properties.hasOwnProperty('$distance_end')) {
+        if (this.lineMetrics && !!feature.properties &&
+            feature.properties.hasOwnProperty('clip_start') &&      // TODO finalize names
+            feature.properties.hasOwnProperty('clip_end')) {
             lineDistances = {
-                start: feature.properties.$distance_start,
-                end: feature.properties.$distance_end,
+                start: feature.properties.clip_start,
+                end: feature.properties.clip_end,
                 tileTotal: undefined
             };
         }

@@ -97,6 +97,7 @@ class GeoJSONSource extends Evented implements Source {
         this.tileSize = 512;
         this.isTileClipped = true;
         this.reparseOverscaled = true;
+        this.lineMetrics = !!options.lineMetrics;
         this._removed = false;
 
         this.dispatcher = dispatcher;
@@ -125,7 +126,7 @@ class GeoJSONSource extends Evented implements Source {
                 tolerance: (options.tolerance !== undefined ? options.tolerance : 0.375) * scale,
                 extent: EXTENT,
                 maxZoom: this.maxzoom,
-                lineMetrics: options.lineMetrics || false
+                lineMetrics: this.lineMetrics
             },
             superclusterOptions: {
                 maxZoom: options.clusterMaxZoom !== undefined ?
@@ -238,6 +239,7 @@ class GeoJSONSource extends Evented implements Source {
             maxZoom: this.maxzoom,
             tileSize: this.tileSize,
             source: this.id,
+            lineMetrics: this.lineMetrics,
             pixelRatio: browser.devicePixelRatio,
             overscaling: tile.tileID.overscaleFactor(),
             showCollisionBoxes: this.map.showCollisionBoxes

@@ -53,6 +53,7 @@ class WorkerTile {
         this.overscaling = params.overscaling;
         this.showCollisionBoxes = params.showCollisionBoxes;
         this.collectResourceTiming = !!params.collectResourceTiming;
+        this.lineMetrics = params.lineMetrics;
     }
 
     parse(data: VectorTile, layerIndex: StyleLayerIndex, actor: Actor, callback: WorkerTileCallback) {
@@ -108,7 +109,8 @@ class WorkerTile {
                     zoom: this.zoom,
                     pixelRatio: this.pixelRatio,
                     overscaling: this.overscaling,
-                    collisionBoxArray: this.collisionBoxArray
+                    collisionBoxArray: this.collisionBoxArray,
+                    lineMetrics: this.lineMetrics
                 });
 
                 bucket.populate(features, options);

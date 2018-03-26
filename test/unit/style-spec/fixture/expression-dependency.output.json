@@ -1,0 +1,18 @@
+[
+  {
+    "message": "sources.geojson: unknown property \"lineMetrics\"",
+    "line": 6
+  },
+  {
+    "message": "layers[0].paint.line-gradient: unknown property \"line-gradient\"",
+    "line": 16
+  },
+  {
+    "message": "layers[1].paint.line-gradient: unknown property \"line-gradient\"",
+    "line": 29
+  },
+  {
+    "message": "layers[3].paint.heatmap-color[2][0]: Unknown expression \"wrong-input\". If you wanted a literal array, use [\"literal\", [...]].",
+    "line": 55
+  }
+]

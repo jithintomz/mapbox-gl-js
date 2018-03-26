@@ -1,0 +1,64 @@
+{
+  "version": 8,
+  "sources": {
+    "geojson": {
+      "type": "geojson",
+      "lineMetrics": true,
+      "data": {}
+    }
+  },
+  "layers": [
+    {
+      "id": "line-gradient-good",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-gradient": [
+          "interpolate",
+          ["linear"],
+          ["line-progress"],
+          0, "#000000"
+        ]
+      }
+    },
+    {
+      "id": "line-gradient-bad",
+      "type": "line",
+      "source": "geojson",
+      "paint": {
+        "line-gradient": [
+          "interpolate",
+          ["linear"],
+          ["wrong-input"],
+          0, "#000000"
+        ]
+      }
+    },
+    {
+      "id": "heatmap-density-good",
+      "type": "heatmap",
+      "source": "geojson",
+      "paint": {
+        "heatmap-color": [
+          "interpolate",
+          ["linear"],
+          ["heatmap-density"],
+          0, "#000000"
+        ]
+      }
+    },
+    {
+      "id": "heatmap-density-bad",
+      "type": "heatmap",
+      "source": "geojson",
+      "paint": {
+        "heatmap-color": [
+          "interpolate",
+          ["linear"],
+          ["wrong-input"],
+          0, "#000000"
+        ]
+      }
+    }
+  ]
+}

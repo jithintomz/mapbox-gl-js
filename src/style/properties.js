@@ -52,8 +52,8 @@ type TimePoint = number;
  *
  *  There are two main implementations of the interface -- one for properties that allow data-driven values,
  *  and one for properties that don't. There are a few "special case" implementations as well: one for properties
- *  which cross-fade between two values rather than interpolating, one for `heatmap-color` and `line-gradient`,
- *  and one for `light-position`.
+ *  which cross-fade between two values rather than interpolating, one for color ramp properties which do very,
+ *  little evaluation here in favor of doing so on the StyleLayer classes, and one for `light-position`.
  *
  * @private
  */

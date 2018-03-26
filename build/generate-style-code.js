@@ -16,6 +16,10 @@ global.isDataDriven = function (property) {
     return property['property-function'] === true;
 };
 
+global.isCalculationDependent = function(property) {
+    return !!property['expression-dependency'];
+}
+
 global.flowType = function (property) {
     switch (property.type) {
         case 'boolean':
@@ -43,7 +47,7 @@ global.propertyType = function (property) {
         return `DataDrivenProperty<${flowType(property)}>`;
     } else if (/-pattern$/.test(property.name) || property.name === 'line-dasharray') {
         return `CrossFadedProperty<${flowType(property)}>`;
-    } else if (property.name === 'heatmap-color' || property.name === 'line-gradient') {
+    } else if (isCalculationDependent(property) && property.type === 'color') {
         return `ColorRampProperty`;
     } else {
         return `DataConstantProperty<${flowType(property)}>`;
@@ -95,7 +99,7 @@ global.propertyValue = function (property, type) {
         return `new DataDrivenProperty(styleSpec["${type}_${property.layerType}"]["${property.name}"])`;
     } else if (/-pattern$/.test(property.name) || property.name === 'line-dasharray') {
         return `new CrossFadedProperty(styleSpec["${type}_${property.layerType}"]["${property.name}"])`;
-    } else if (property.name === 'heatmap-color' || property.name === 'line-gradient') {
+    } else if (isCalculationDependent(property) && property.type === 'color') {
         return `new ColorRampProperty(styleSpec["${type}_${property.layerType}"]["${property.name}"])`;
     } else {
         return `new DataConstantProperty(styleSpec["${type}_${property.layerType}"]["${property.name}"])`;

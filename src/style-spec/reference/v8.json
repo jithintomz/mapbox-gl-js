@@ -3286,6 +3286,7 @@
       "zoom-function": false,
       "property-function": false,
       "transition": false,
+      "expression-dependency": "line-progress",
       "requires": [
         {
           "!": "line-dasharray"
@@ -3646,6 +3647,7 @@
       "zoom-function": false,
       "property-function": false,
       "transition": false,
+      "expression-dependency": "heatmap-density",
       "sdk-support": {
         "basic functionality": {
           "js": "0.41.0"
