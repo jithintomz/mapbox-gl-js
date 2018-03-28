@@ -104,11 +104,11 @@ class RasterTileSource extends Evented implements Source {
                 const gl = context.gl;
                 tile.texture = this.map.painter.getTileTexture(img.width);
                 if (tile.texture) {
-                    tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                    tile.texture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
                     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, img);
                 } else {
                     tile.texture = new Texture(context, img, gl.RGBA);
-                    tile.texture.bind(gl.LINEAR, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
+                    tile.texture.bind(gl.NEAREST, gl.CLAMP_TO_EDGE, gl.LINEAR_MIPMAP_NEAREST);
 
                     if (context.extTextureFilterAnisotropic) {
                         gl.texParameterf(gl.TEXTURE_2D, context.extTextureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, context.extTextureFilterAnisotropicMax);
